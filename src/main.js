@@ -179,7 +179,8 @@ let appSettings = {
   hiddenNavButtons: [],
   streamWindow: { width: 960, height: 600, x: null, y: null, pinned: false, chatOpen: false, videoHidden: false, prevWinWidth: 960 },
   updaterEnabled: true,
-  skippedVersion: ''
+  skippedVersion: '',
+  alwaysOnTop: false
 };
 
 function loadSettings() {
@@ -206,6 +207,18 @@ function saveSettingsDebounced() {
   if (saveSettingsDebounced.timer) clearTimeout(saveSettingsDebounced.timer);
 
   saveSettingsDebounced.timer = setTimeout(saveSettings, 500);
+}
+
+// ── Always-on-top ────────────────────────────────────────────────────────────
+// Applies appSettings.alwaysOnTop to the main window and every window LostKit
+// opens, EXCEPT creator stream/chat windows (tagged _isCreatorWindow), which
+// own their pin state via the stream window's own "always on top" control.
+function applyAlwaysOnTop(win) {
+  if (!win || win.isDestroyed() || win._isCreatorWindow) return;
+  try { win.setAlwaysOnTop(!!appSettings.alwaysOnTop); } catch (e) {}
+}
+function applyAlwaysOnTopAll() {
+  for (const win of BrowserWindow.getAllWindows()) applyAlwaysOnTop(win);
 }
 
 // ── Creators background polling ──────────────────────────────────────────────
@@ -290,6 +303,7 @@ function fireCreatorNotif(title, body, videoId) {
         webPreferences: { nodeIntegration: true, contextIsolation: false, webviewTag: true },
         autoHideMenuBar: true, frame: false,
       });
+      sw._isCreatorWindow = true; // self-manages its own pin/always-on-top
       sw.loadFile(path.join(__dirname, 'youtube-stream.html'), {
         query: { v: videoId, title: encodeURIComponent(title||''), mode: 'stream', live: '1' }
       });
@@ -643,6 +657,10 @@ function scheduleRendererResizeEvents() {
   rendererResizeTimer = setTimeout(() => {
     rendererResizeTimer = null;
     getViewWebContents().forEach(wc => {
+      // Skip views still loading: executeJavaScript would queue a did-stop-loading
+      // listener until load finishes, piling up and triggering MaxListeners warnings.
+      // A view that just loaded already lays out at its correct bounds.
+      if (wc.isLoading()) return;
       wc.executeJavaScript("window.dispatchEvent(new Event('resize'));", true).catch(() => {});
     });
   }, 16);
@@ -884,6 +902,7 @@ app.whenReady().then(() => {
     title: `LostKit 2 v${version} - by LostHQ Team`
   });
   mainWindow.loadFile(path.join(__dirname, 'index.html'));
+  applyAlwaysOnTop(mainWindow);
   mainWindow.webContents.on('did-finish-load', () => {
     applyFontToView(mainWindow.webContents, false);
     setupAutoUpdater();
@@ -975,6 +994,14 @@ ipcMain.on('save-screenshot', (event, dataUrl) => {
   ipcMain.on('set-screenshot-keybind', (event, accelerator) => { appSettings.screenshotKeybind = accelerator || ''; saveSettings(); registerScreenshotKeybind(accelerator); });
   ipcMain.handle('get-screenshot-keybind', () => appSettings.screenshotKeybind || '');
 
+  // ── Always-on-top toggle ──────────────────────────────────────────────────
+  ipcMain.handle('get-always-on-top', () => !!appSettings.alwaysOnTop);
+  ipcMain.on('set-always-on-top', (event, enabled) => {
+    appSettings.alwaysOnTop = !!enabled;
+    saveSettings();
+    applyAlwaysOnTopAll();
+  });
+
   // ── Settings popup ──────────────────────────────────────────────────────────
   ipcMain.on('open-settings-popup', () => {
     if (settingsWindow && !settingsWindow.isDestroyed()) { settingsWindow.focus(); return; }
@@ -985,6 +1012,7 @@ ipcMain.on('save-screenshot', (event, dataUrl) => {
       autoHideMenuBar: true, webPreferences: { nodeIntegration: true, contextIsolation: false }, title: 'LostKit - Settings'
     });
     settingsWindow.loadFile(path.join(__dirname, 'navitems/stopwatch-settings.html'));
+    applyAlwaysOnTop(settingsWindow);
     const saveSettingsBounds = () => {
       if (settingsWindow && !settingsWindow.isDestroyed() && !settingsWindow.isMinimized()) {
         const b = settingsWindow.getBounds();
@@ -1746,6 +1774,7 @@ ipcMain.on('save-screenshot', (event, dataUrl) => {
       autoHideMenuBar: true, webPreferences: { nodeIntegration: true, contextIsolation: false }, title: 'LostKit - Sound Manager'
     });
     soundManagerWindow.loadFile(path.join(__dirname, 'navitems/sound-manager.html'));
+    applyAlwaysOnTop(soundManagerWindow);
     const saveSMBounds = () => {
       if (soundManagerWindow && !soundManagerWindow.isDestroyed() && !soundManagerWindow.isMinimized()) {
         const b = soundManagerWindow.getBounds();
@@ -1785,6 +1814,7 @@ ipcMain.on('save-screenshot', (event, dataUrl) => {
       webPreferences: { nodeIntegration: true, contextIsolation: false }, title: 'LostKit - Notes'
     });
     notesWindow.loadFile(path.join(__dirname, 'navitems/notes.html'));
+    applyAlwaysOnTop(notesWindow);
     const saveNotesBounds = () => {
       if (notesWindow && !notesWindow.isDestroyed() && !notesWindow.isMinimized()) {
         const b = notesWindow.getBounds();
@@ -1972,6 +2002,7 @@ ipcMain.on('save-screenshot', (event, dataUrl) => {
       webPreferences: { webSecurity: false },
       autoHideMenuBar: true,
     });
+    chatWin._isCreatorWindow = true; // creators window, excluded from global always-on-top
     chatWin.loadURL(`https://www.youtube.com/live_chat?v=${videoId}`);
     chatWin.on('close', () => chatWin.destroy());
   });
@@ -2040,6 +2071,7 @@ ipcMain.on('save-screenshot', (event, dataUrl) => {
       autoHideMenuBar: true,
       frame: false,
     });
+    streamWin._isCreatorWindow = true; // self-manages its own pin/always-on-top
     // Restore always-on-top if it was pinned
     if (sw.pinned) {
       streamWin.setAlwaysOnTop(true, 'screen-saver');
@@ -2095,6 +2127,7 @@ ipcMain.on('save-screenshot', (event, dataUrl) => {
           autoHideMenuBar: true,
           frame: false,
         });
+        streamWin._isCreatorWindow = true; // self-manages its own pin/always-on-top
         streamWin.loadFile(path.join(__dirname, 'youtube-stream.html'), {
           query: { v: videoId, title: encodeURIComponent(title || ''), mode: 'both' }
         });
@@ -2172,6 +2205,7 @@ ipcMain.on('save-screenshot', (event, dataUrl) => {
       title: title || url, webPreferences: { webSecurity: false, preload: path.join(__dirname, 'preload-zoom-shared.js') }
     });
     win.loadURL(url); win.setMenuBarVisibility(false);
+    applyAlwaysOnTop(win);
     externalWindowsByUrl.set(url, win);
     if (!appSettings.externalWindows) appSettings.externalWindows = {};
     if (appSettings.externalZoom && appSettings.externalZoom[url]) win.webContents.once('did-finish-load', () => { try { win.webContents.setZoomFactor(appSettings.externalZoom[url]); } catch (e) {} });

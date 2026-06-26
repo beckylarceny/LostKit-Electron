@@ -23,6 +23,38 @@ const skillMap = {
     21: { name: 'Runecraft', icon: 'runecraft.webp' }
 };
 
+// Cumulative XP required to reach a given level (standard RuneScape formula).
+function xpForLevel(level) {
+    if (level <= 1) return 0;
+    let points = 0;
+    for (let lvl = 1; lvl < level; lvl++) {
+        points += Math.floor(lvl + 300 * Math.pow(2, lvl / 7));
+    }
+    return Math.floor(points / 4);
+}
+
+// Compute the progress-to-next-level bar and the remaining-XP text for a skill.
+// Overall (type 0) has no single next level, so it gets neither.
+function computeSkillProgress(skillType, level, xp) {
+    if (skillType === 0) return { bar: '', next: '' };
+    if (level >= 99) {
+        return {
+            bar: '<div class="stat-progress maxed"><div class="stat-progress-fill" style="width:100%"></div></div>',
+            next: '<span class="stat-next maxed">Maxed</span>'
+        };
+    }
+    const base = xpForLevel(level);
+    const nextLvlXp = xpForLevel(level + 1);
+    const span = nextLvlXp - base;
+    const into = Math.max(0, xp - base);
+    const pct = span > 0 ? Math.max(0, Math.min(100, (into / span) * 100)) : 0;
+    const remaining = Math.max(0, nextLvlXp - xp);
+    return {
+        bar: `<div class="stat-progress" title="${remaining.toLocaleString()} XP to level ${level + 1}"><div class="stat-progress-fill" style="width:${pct.toFixed(1)}%"></div></div>`,
+        next: `<span class="stat-next">Next: ${remaining.toLocaleString()} XP</span>`
+    };
+}
+
 async function lookupPlayer() {
     const playerName = document.getElementById('playerName').value.trim();
     if (!playerName) {
@@ -71,15 +103,20 @@ function displayPlayerStats(playerName, statsData) {
             const statRow = document.createElement('div');
             statRow.className = 'stat-row';
 
+            const xp = Math.floor(stat.value / 10);
+            const progress = computeSkillProgress(skillType, stat.level, xp);
+
             statRow.innerHTML = `
                 <img src="../assets/skillicons/${skill.icon}" alt="${skill.name}" class="stat-icon">
                 <div class="stat-info">
                     <div class="stat-values">
                         <span class="stat-level">Level: ${stat.level.toLocaleString()}</span>
-                        <span class="stat-xp">XP: ${Math.floor(stat.value / 10).toLocaleString()}</span>
+                        <span class="stat-xp">XP: ${xp.toLocaleString()}</span>
                         <span class="stat-rank">Rank: ${stat.rank.toLocaleString()}</span>
+                        ${progress.next}
                     </div>
                 </div>
+                ${progress.bar}
             `;
 
             statsGrid.appendChild(statRow);

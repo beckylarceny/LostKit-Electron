@@ -380,6 +380,22 @@
         <!-- Appearance tab -->
         <div id="tab-appearance" class="tab-panel">
             <div class="folder-section">
+                <div class="section-label">Window</div>
+                <div style="color: #b8a060; font-size: 11px; margin-bottom: 12px; line-height: 1.5;">
+                    Keeps LostKit and the windows it opens above other applications.<br>
+                    The creator stream/video window keeps its own pin control and is not affected.
+                </div>
+                <div class="setting-row">
+                    <label>Always on top:</label>
+                    <label class="sound-checkbox-label">
+                        <input type="checkbox" id="always-on-top-checkbox">
+                        <span class="sound-checkmark"></span>
+                        <span>Keep client always on top</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="folder-section">
                 <div class="section-label">Interface Font</div>
                 <div style="color: #b8a060; font-size: 11px; margin-bottom: 12px; line-height: 1.5;">
                     Changes the default font used across the entire interface.<br>
@@ -818,6 +834,7 @@
             { id: 'forums',        label: 'Forums' },
             { id: 'coordinates',   label: 'Coordinates' },
             { id: 'cluehelp',      label: 'Clue Help' },
+            { id: 'puzzlesolver',  label: 'Puzzle Solver' },
             { id: 'worldmap',      label: 'World Map' },
             { id: 'markets',       label: 'Markets' },
             { id: 'questguides',   label: 'Quest Guides' },
@@ -1116,6 +1133,15 @@
             screenshotKeybind = keybind || '';
             screenshotKeybindInput.value = acceleratorToDisplay(screenshotKeybind);
             updateKeybindStatus();
+        });
+
+        // --- Always-on-top Logic ---
+        const alwaysOnTopCheckbox = document.getElementById('always-on-top-checkbox');
+        alwaysOnTopCheckbox.addEventListener('change', () => {
+            ipcRenderer.send('set-always-on-top', alwaysOnTopCheckbox.checked);
+        });
+        ipcRenderer.invoke('get-always-on-top').then((enabled) => {
+            alwaysOnTopCheckbox.checked = !!enabled;
         });
 
         // Request settings on load
