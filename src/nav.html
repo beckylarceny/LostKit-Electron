@@ -11,6 +11,7 @@
 </head>
 <body>
     <div class="nav" id="nav-panel">
+        <!--
         <div class="nav-buttons-top">
             <div class="nav-button screenshot-btn" onclick="captureScreenshot()" title="Capture Screenshot">
                 <img src="assets/capture.png" class="nav-icon">
@@ -26,6 +27,7 @@
                 <img src="assets/calculator.png" class="nav-icon" style="width:30px; height:30px;">
             </div>
         </div>
+        -->
         <!-- strip toggle moved to header -->
         <div class="nav-button special-link" onclick="openNav('worldswitcher')" data-nav-id="worldswitcher">
             <img src="assets/LostCity.png" class="nav-icon">
@@ -108,28 +110,30 @@
         function toggleChat() { ipcRenderer.send('toggle-chat'); }
         function openExternal(url, title) { ipcRenderer.send('open-external', url, title); }
         function openNotes() { ipcRenderer.invoke('open-notes'); }
-
+        
+        /*
         // Screenshot functions
         function captureScreenshot() {
-            ipcRenderer.send('capture-screenshot');
+        ipcRenderer.send('capture-screenshot');
         }
-
+        
         function openScreenshotFolder() {
-            ipcRenderer.send('open-screenshot-folder');
+        ipcRenderer.send('open-screenshot-folder');
         }
-
+        
         function openSettingsPopup() {
-            ipcRenderer.send('open-settings-popup');
+        ipcRenderer.send('open-settings-popup');
         }
-
+        */
+        
         function toggleNavPanel() {
             ipcRenderer.send('toggle-nav-panel');
         }
-
+        
         function toggleNavPanelStripMode() {
             ipcRenderer.send('toggle-nav-panel-mode');
         }
-
+        
         function setNavPanelMode(mode) {
             const stripBtn = document.getElementById('nav-panel-strip-toggle');
             const stripLabel = document.getElementById('nav-panel-strip-label');
@@ -143,23 +147,23 @@
             }
             document.body.classList.toggle('strip-mode', mode === 'strip');
         }
-
+        
         document.getElementById('nav-panel-strip-toggle')?.addEventListener('click', toggleNavPanelStripMode);
         ipcRenderer.on('nav-panel-mode', (event, mode) => {
             setNavPanelMode(mode || 'expanded');
         });
-
+        
         ipcRenderer.on('nav-panel-collapsed', (event, collapsed) => {
             const icon = document.getElementById('nav-toggle-icon');
             if (icon) icon.textContent = collapsed ? '⮜' : '⮞';
         });
-
+        
         function applyNavVisibility(hiddenIds) {
             document.querySelectorAll('[data-nav-id]').forEach(el => {
                 el.style.display = hiddenIds.includes(el.getAttribute('data-nav-id')) ? 'none' : '';
             });
         }
-
+        
         function updateChatButtonState(visible) {
             const chatButton = document.querySelector('.nav-button[data-nav-id="chat"]');
             if (!chatButton) return;
@@ -168,25 +172,25 @@
             const stateSpan = chatButton.querySelector('.chat-state');
             if (stateSpan) stateSpan.textContent = visible ? 'Disable chat' : 'Enable chat';
         }
-
+        
         ipcRenderer.on('chat-toggled', (event, visible) => {
             updateChatButtonState(visible);
         });
-
+        
         // Apply visibility on load
         ipcRenderer.invoke('get-hidden-nav-buttons').then(hiddenIds => {
             if (hiddenIds && hiddenIds.length) applyNavVisibility(hiddenIds);
         }).catch(() => {});
-
+        
         // React to live updates from settings
         ipcRenderer.on('update-nav-visibility', (event, hiddenIds) => {
             applyNavVisibility(hiddenIds);
         });
-
+        
         // ── Update badge ──────────────────────────────────────────────────────
         const updateBadge = document.getElementById('update-badge');
         const settingsBtn = document.getElementById('settings-nav-btn');
-
+        
         ipcRenderer.on('update-downloading', (event, version) => {
             if (updateBadge) {
                 updateBadge.style.display = 'block';
@@ -196,11 +200,11 @@
             }
             if (settingsBtn) settingsBtn.title = 'Settings (downloading update…)';
         });
-
+        
         ipcRenderer.on('update-progress', (event, pct) => {
             if (settingsBtn) settingsBtn.title = `Settings (update ${pct}%)`;
         });
-
+        
         ipcRenderer.on('update-ready', (event, version) => {
             if (updateBadge) {
                 updateBadge.style.display = 'block';
