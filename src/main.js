@@ -37,7 +37,7 @@ function snapToZoomStep(factor) {
 }
 
 const NAV_PANEL_WIDTH = 190;
-const NAV_PANEL_STRIP_WIDTH = 70;
+const NAV_PANEL_STRIP_WIDTH = 55;
 let navPanelMode = 'expanded';
 let navPanelDesiredMode = 'expanded';
 let navPanelPrevMode = null;

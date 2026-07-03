@@ -40,7 +40,7 @@ body {
     background: #1a1a1a;
     border: 2px solid #8b6914;
     border-radius: 8px;
-    padding: 8px;
+    padding: 4px;
     overflow-y: auto;
     box-sizing: border-box;
 }
@@ -109,7 +109,7 @@ body {
 }
 
 .strip-mode .nav-button.link {
-    padding-right: 48px;
+    padding-right: 4px;
 }
 
 .strip-mode .nav-button .open-external {
@@ -815,7 +815,7 @@ button:active, .btn:active {
 }
 
 .nav-button.link {
-    padding-right: 40px;
+    padding-right: 4px;
 }
 
 .nav-button.link span:first-of-type {
@@ -824,7 +824,7 @@ button:active, .btn:active {
 
 .nav-button.link .open-external {
     position: absolute;
-    right: 10px;
+    right: 4px;
     top: 50%;
     transform: translateY(-50%);
     width: 20px;
