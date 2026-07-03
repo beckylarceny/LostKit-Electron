@@ -11,23 +11,6 @@
 </head>
 <body>
     <div class="nav" id="nav-panel">
-        <!--
-        <div class="nav-buttons-top">
-            <div class="nav-button screenshot-btn" onclick="captureScreenshot()" title="Capture Screenshot">
-                <img src="assets/capture.png" class="nav-icon">
-            </div>
-            <div class="nav-button screenshot-btn" onclick="openScreenshotFolder()" title="Open Screenshot Folder">
-                <img src="assets/folder.png" class="nav-icon">
-            </div>
-            <div class="nav-button screenshot-btn" onclick="openSettingsPopup()" title="Settings" id="settings-nav-btn" style="position:relative;">
-                <img src="assets/settings.png" class="nav-icon">
-                <span id="update-badge" style="display:none;position:absolute;top:2px;right:2px;width:10px;height:10px;background:#51cf66;border-radius:50%;border:2px solid #141414;box-shadow:0 0 6px #51cf66;"></span>
-            </div>
-            <div class="nav-button screenshot-btn" onclick="ipcRenderer.send('open-calculator')" title="Calculator">
-                <img src="assets/calculator.png" class="nav-icon" style="width:30px; height:30px;">
-            </div>
-        </div>
-        -->
         <!-- strip toggle moved to header -->
         <div class="nav-button special-link" onclick="openNav('worldswitcher')" data-nav-id="worldswitcher">
             <img src="assets/LostCity.png" class="nav-icon">
@@ -110,21 +93,6 @@
         function toggleChat() { ipcRenderer.send('toggle-chat'); }
         function openExternal(url, title) { ipcRenderer.send('open-external', url, title); }
         function openNotes() { ipcRenderer.invoke('open-notes'); }
-        
-        /*
-        // Screenshot functions
-        function captureScreenshot() {
-        ipcRenderer.send('capture-screenshot');
-        }
-        
-        function openScreenshotFolder() {
-        ipcRenderer.send('open-screenshot-folder');
-        }
-        
-        function openSettingsPopup() {
-        ipcRenderer.send('open-settings-popup');
-        }
-        */
         
         function toggleNavPanel() {
             ipcRenderer.send('toggle-nav-panel');
