@@ -35,7 +35,7 @@
     "@electron-forge/publisher-github": "^7.6.0",
     "@electron/fuses": "^1.8.0",
     "electron": "^40.2.1",
-    "electron-builder": "^26.15.3"
+    "electron-builder": "^26.4.0"
   },
   "overrides": {
     "tar": "7.5.15",
@@ -67,9 +67,7 @@
       "artifactName": "${productName}-Setup-${version}.${ext}"
     },
     "linux": {
-      "target": [
-        "AppImage"
-      ],
+      "target": ["AppImage"],
       "artifactName": "${productName}-${version}.${ext}",
       "icon": "src/assets/icon.png"
     }
